@@ -2,6 +2,8 @@
 
 Confetti ...
 
+---
+
 ## String
 
 #### 访问字符串中某个下标对应的内容
@@ -38,4 +40,3 @@ Confetti ...
 let strRange = str.startIndex.advancedBy(5)..<str.endIndex
 str.removeRange(strRange)
 ```
-
