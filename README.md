@@ -40,3 +40,7 @@ Confetti ...
 let strRange = str.startIndex.advancedBy(5)..<str.endIndex
 str.removeRange(strRange)
 ```
+
+
+
+## 集合类型
