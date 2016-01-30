@@ -126,3 +126,72 @@ str.removeRange(strRange)
   ```
   
 + 字典也是无序的，如果想要特定顺序遍历，需要对keys/values使用sort()方法.
+
+---
+
+## Switch
+
++ Swift中switch可以匹配多个值
+  
+  ``` swift
+  let value = "a"
+  switch value {
+  case "a", "b":
+      statements
+  }
+  ```
+  
++ 区间匹配
+  
+  ``` swift
+  switch count {
+  case 0:
+      ...
+  case 1..<5:
+      ...
+  default:
+      ...
+  }
+  ```
+  
++ 元组匹配
+  
+  ``` swift
+  let point = (1, 1)
+  switch point {
+  case (0, 0):
+      ...
+  case (_, 0): // _代表匹配所有可能的值
+      ...
+  default:
+      ...
+  }
+  ```
+  
++ 补充
+  
+  ``` swift
+  if #available(iOS 9, *) { // iOS 9及以上才可用
+    // statements
+  } else{
+    // statements
+  }
+  ```
+
+---
+
+## 函数
+
++ 可变参数在函数内部即为`数组`，并且__一个函数最多只能有一个可变参数__.
+  
+  ``` swift
+  func testFunc(numbers: Double...) {
+      print(numbers)
+  }
+  ```
+  
++ 如果一个函数有一个或多个默认参数，而且还有一个可变参数，那么把可变参数放在最后.
+  
++ 在使用In-Out参数的时候，只能传递变量给输入输出参数，不能传递常量或字面量，因为In-Out参数可能会被函数修改，然后被传出函数替换原来的值.在给In-Out传递变量的时候，不要忘记在变量前使用`&`. 用inout标记一个参数，这个参数不能被var或者let标记.
+  
+  ​
