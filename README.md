@@ -336,5 +336,21 @@ str.removeRange(strRange)
   let product = ArithmeticExpression.Multiplication(sum, ArithmeticExpression.Number(2))
   print(evaluate(product))
   ```
+
+---
+
+## 类和结构体
+
++ 结构体自带有一个`成员逐一构造器`.
+  
+  类实例是没有的.
+  
++ 结构体不可以继承.
+  
+  类可以继承.
+  
++ 结构体是`值类型`.
+  
+  类是`引用类型`.
   
   ​
