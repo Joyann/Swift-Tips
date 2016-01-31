@@ -258,7 +258,83 @@ str.removeRange(strRange)
   自动闭包可以省略闭包的大括号，并且达到延迟执行的目的.比如此例中，`array.removeLast()`会返回被移除的最后一个元素，作为自动闭包的参数，移除操作不是马上执行，而是在函数中调用`closure()`才会真正的执行移除操作，即延迟执行. 自动闭包在使用的时候注意类型要一致.
   
 + @autoclosure特性暗含了`@noescape`特性，即默认是函数执行完成闭包不再执行，而是直接在函数中执行. 如果是`自动闭包`，又需要`逃逸`(比如先将这个闭包存起来以后再用，而不是在函数中直接执行)，那么需要使用`@autoclosure(escaping)`来修饰.
+
+---
+
+## 枚举
+
++ 枚举的__原始值__可以是__字符串__，__字符__，__整型__，__浮点数__.
   
-  ​
+  枚举的__关联值__可以是__任意值__.
+  
++ Swift的枚举成员在被创建时不会被赋予一个默认的整型值.
+  
+  ``` swift
+  enum CompassPoint {
+  	case North
+      case South
+      case East
+      case West
+  }
+  ```
+  
+  `North`，`South`，`East`，`West`不会隐式地被赋值成`0`，`1`，`2`，`3`.这些枚举成员本身就是完备的值，这些值的类型是已经明确定义好的`CompassPoint`类型.
+  
+  枚举成员也可以写在同一行：
+  
+  ``` swift
+  enum CompassPoint {
+  	case North, South, East, West
+  }
+  ```
+  
++ 每一个枚举都定义了一个全新的类型，所以__枚举名要大写__.给枚举起一个__单数名字__而不是复数名字，以便阅读起来更方便.
+  
++ 每一个__原始值__在枚举声明中必须是唯一的.
+  
++ 原始值和关联值
+  
+  > 原始值和关联值是不同的。
+  > 
+  > 原始值是定义枚举时被预先填充的值.对于一个特定的枚举成员，它的原始值始终不变.
+  > 
+  > 关联值是创建一个基于枚举成员的变量或常量时才会设置的值，枚举成员的关联值可以变化.
+  
+  也就是说，原始值是在声明枚举的时候就确定，并且始终不变.关联值是在声明枚举的时候声明类型，在真正定义枚举成员的时候才会设置值，并且可以变化.
+  
++ 原始值的隐式赋值
+  
+  在使用`整数`或者`字符串`类型的原始值时，Swift会自动为你赋值.
+  
+  + 当使用`整数`作为原始值，隐式赋值的值依次+1.如果第一个枚举成员没有设置原始值，则默认为0.
+  + 当使用`字符串`作为原始值，默认为`该枚举成员的名称`.
+  
++ 递归枚举
+  
+  ``` swift
+  indirect enum ArithmeticExpression { // 表示所有成员都是可递归的
+  	case Number(Int)
+      case Addition(ArithmeticExpression, ArithmeticExpression)
+      case Multiplication(ArithmeticExpression, ArithmeticExpression)
+  }
+  
+  func evaluate(expression: ArithmeticExpression) -> Int {
+  	switch expression {
+      	case .Number(let value):
+          	return value
+          case .Addition(let left, let right):
+          	return evaluate(left) + evaluate(right)
+  		case .Multiplication(let left, let right):
+          	return evaluate(left) * evaluate(right)
+  	}
+  }
+  
+  // 计算 (5 + 4) * 2
+  let five = ArithmeticExpression.Number(5)
+  let four = ArithmeticExpression.Number(4)
+  let sum  = ArithmeticExpression.Addition(five, four)
+  let product = ArithmeticExpression.Multiplication(sum, ArithmeticExpression.Number(2))
+  print(evaluate(product))
+  ```
   
   ​
