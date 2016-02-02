@@ -510,5 +510,75 @@ str.removeRange(strRange)
   __在类拓展中的方法，属性或下标脚本__也可以在扩展的定义里标记为`final`.
   
   另外，可以用`final`来修饰`class`，这样这个类是不可被继承的.
+
+
+
+---
+
+## 构造过程
+
++ 在为存储型属性__设置默认值__或通过__构造器为其赋值__的时候，是直接赋值的，并不会触发`属性观察者`.
+  
++ 如果一个属性总是使用形同的初始值，那么设置默认值比每次在构造器中赋值要好.使用默认值能让构造器更简洁且能自动推导类型；同时，它也能让你充分利用默认构造器、构造器继承等特性.
+  
++ 构造器与函数和方法的名字不同，构造器的名字是`init`开头不好辨别，因此在调用构造器的时候主要通过构造器中的参数名和类型里确定需要调用的构造器.__Swift会为每个构造器的参数自动生成一个跟内部名字相同的外部名__.
+  
+  ``` swift
+  struct Color {
+    let red, green, blue: Double
+    init(red: Double, green: Double, blue: Double) {
+    	self.red = red
+      self.green = green
+      self.blue = blue
+    }
+  }
+  
+  let magenta = Color(red: 1.0, green: 0.0, blue: 1.0)
+  ```
+  
+  也就是说，普通的方法会自动为__除第一个参数外的其它参数自动添加一个同名外部变量__；而构造器则是为__所有参数自动添加一个同名外部变量__.
+  
++ 使用`_`忽略外部参数名.
+  
++ 对于类的实例来说，它的常量属性只能在定义它的类的构造过程中修改，而不能在子类中修改.
+  
+  ``` swift
+  class Person {
+  	let name: String
+      init() {
+      	self.name = "Joyann" // 这里修改是可以的.
+  	}
+  }
+  
+  class Student: Person {
+  	override init() {
+      	self.name = "Rudy" //这里修改会报错
+  	}
+  }
+  ```
+  
++ 如果结构体/类所有属性都有默认值，同时没有自定义构造器，那么Swift会给这些结构体/类创建一个默认构造器.
+  
+  ``` swift
+  class ShoppingListItem {
+  	var name: String?
+      var quantity = 1
+      var purchased = false
+  }
+  
+  var item = ShoppingListItem()
+  ```
+  
+  注意，这里有两个条件：所有属性都有默认值，没有自定义构造器.
+  
+  另外，结构体如果满足上面两个条件，能获得一个`逐一成员构造器`.
+  
+  ``` swift
+  struct size {
+    var width = 0.0
+    var height = 0.0
+  }
+  let twoByTwo = Size(width: 2.0, height: 2.0)
+  ```
   
   ​
