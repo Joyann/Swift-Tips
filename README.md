@@ -801,3 +801,103 @@ str.removeRange(strRange)
 
 + 不要主动调用析构函数.
 + 子类继承了父类的析构器，并且在子类析构器实现的最后，父类的析构器会被__自动调用__. 即使子类没有提供自己的析构器，父类的析构器也会被调用.
+
+---
+
+## 可空链式调用(Optional Chaining)
+
++ 可空链式调用的返回结果与原本的返回结果相同类型，__但是被包装成了一个可空类型__ . 当可空链式调用成功时，一个本应该返回`Int`的将会返回`Int?`类型.
+  
+  ``` swift
+  if let roomCount = john.residence?.numberOfRooms {
+    ... 
+  } else {
+    ...
+  }
+  ```
+  
+  注意，`numberOfRooms`是一个`Int`类型，但是通过可空链式调用就意味着它将返回一个`Int?`而不再是`Int`类型.
+  
++ 通过可空链式调用方法
+  
+  可以通过可空链式调用方法，并判断是否调用成功，__即使这个方法没有返回值__.
+  
+  ``` swift
+  func printNumberOfRooms() {
+    ...
+  }
+  ```
+  
+  这个方法没有返回值，隐式返回`Void`类型，即返回`()`或者空的元组. 如果在可空值上通过可空链式调用来调用这个方法，返回类型变为`Void?`而不是`Void`.
+  
+  ``` swift
+  if john.residence?.printNumberOfRooms() != nil {
+  	// 方法调用成功
+  } else {
+  	// 方法调用失败
+  }
+  ```
+  
++ 通过可空链式访问下标
+  
+  当通过可空链式调用访问可空值的下标的时候，应该将问号放在下标方括号的前面而不是后面.
+  
+  ``` swift
+  if let firstRoomName = john.residence?[0].name {
+  	...
+  } else {
+  	...
+  }
+  ```
+  
++ 访问可空类型的下标
+  
+  ``` swift
+  var testScores = ["Dave": [86, 82, 84], "Bev": [79, 94, 81]]
+  testScores["Dave"]?[0] = 91
+  testScores["Bev"]?[0]++
+  ```
+  
++ 多层链接
+  
+  + 如果你访问的值不是可空的，通过可空链式调用将会放回可空值. (前面的`Int`变成`Int?`的例子)
+    
+  + 如果你访问的值已经是可空的，通过可空链式调用不会变的"更"可空.
+    
+  + `访问的值`指的是可空链的最后一个值.
+    
+  + 举例：
+    
+    ``` swift
+    if let johnsStreet = john.residence?.address?.street {
+    	...
+    } else {
+    	...
+    }
+    ```
+    
+    这里的street本身就是一个可选类型`String?`，通过两层可空链式调用，依然是`String?`而不会"更"可空.
+    
+  + 如果调用一个函数，其返回值本身就是可选类型，同样地，通过可空链式调用方法最终返回值还是`String?`.
+    
+    ``` swift
+    if let buildingIdentifier = john.residence?.address?.buildingIdentifier() {
+    	...
+    } else {
+    	...
+    }
+    ```
+    
+    如果要进一步对方法的__返回值__进行可空链式调用：
+    
+    ``` swift
+    if let beginsWithThe = john.residence?.address?.buildingIdentifier()?.hasPrefix("the") {
+    	if beginsWithThe {
+        	...
+    	} else {
+        	...
+    	}
+    }
+    ```
+    
+    ​
