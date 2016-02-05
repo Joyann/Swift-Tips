@@ -1014,3 +1014,32 @@ str.removeRange(strRange)
   `defer`语句只在当前作用域中起作用，在即将离开作用域的时候会执行`defer`中的语句. 注意，即使没有涉及到错误处理代码，依然可以使用`defer`语句.
   
   如果有多条`defer`语句，是从下向上执行的. (第一条`defer`语句中的代码是在第二条`defer`语句代码执行后再执行)
+
+---
+
+## 检查类型 & 向下转型
+
++ `is`来检查类型，`as`来向下转型(`as?`和`as!`).
+  
++ 在`switch`中使用`is`和`as`并且赋值：
+  
+  ``` swift
+  // things是[Any]
+  for thing in things {
+  	switch thing {
+      	case 0 as Int: 
+          case 0 as Double: 
+          case let someInt as Int: 
+          case let someDouble as Double where someDouble > 0: 
+          case is Double: 
+          case let someString as String: 
+          case let (x, y) as (Double, Double): 
+          case let movie as Movie: 
+          case let stringConverter as String -> String: 
+          default:
+          ...
+  	}
+  }
+  ```
+  
+  ​
