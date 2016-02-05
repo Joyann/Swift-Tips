@@ -591,7 +591,7 @@ str.removeRange(strRange)
   
 + __如果你为某个值类型定义了一个定制的构造器，你将无法访问到默认构造器（如果是结构体，则无法访问逐一成员构造器）. 这样保证当你提供了更完备的构造器之后，别人还是错误的使用自动生成的构造器.__
   
-  > 如果想要使用默认构造器+逐一成员构造器+定制构造器，有两种方式.第一种是将自己定制的构造器写到extension中，而不是跟值类型定义混在一起，这样即使有定制构造器，也会保留之前默认和逐一成员构造器. 第二种是将定制的构造器写在类中，自己手动来实现默认构造器和逐一成员构造器.
+  > 如果想要使用默认构造器+逐一成员构造器+定制构造器，有两种方式.第一种是将自己定制的构造器写到extension中，而不是跟值类型定义混在一起，这样即使有定制构造器，也会保留之前默认和逐一成员构造器. 第二种是将定制的构造器写在原始的值类型中，自己手动来实现默认构造器和逐一成员构造器. 注意这里说的是__值类型__，如果是类，那么extension中是不允许定义__指定构造器和析构器__的，只能定义__便利构造器__.
   
 + 类里面所有__存储型属性（包括所有继承自父类的属性）__都必须在构造过程中设置初始值.
   
@@ -899,5 +899,118 @@ str.removeRange(strRange)
     	}
     }
     ```
-    
-    ​
+
+---
+
+## 错误处理
+
++ Swift中，错误用遵循`ErrorType`协议类型的值来表示.
+  
+  Swift的枚举类型尤为适合塑造一组相关的错误情形，枚举的关联值还可以提供额外信息.
+  
+  ``` swift
+  enum VendingMachineError: ErrorType {
+    case InvalidSelection
+    case InsuffcientFunds(coinsNeeded: Int)
+    case OutOfStock
+  }
+  ```
+  
++ 使用`throw`抛出错误.
+  
+  ``` swift
+  func vend(itemNamed name: String) throws {
+    guard var item = inventory[name] else {
+    	throw VendingMachineError.InvalidSelection
+    }
+  }
+  ```
+  
+  可能抛出错误的函数必须使用`throws`标记. `throws`在`-> 返回值`的前面.
+  
++ 在处理错误的时候，有四种方式：
+  
+  1. 将错误继续传递
+     
+     使用`try`来将可能发生的错误继续传递到调用这个函数的代码处，注意这个函数使用了`try`所以可能抛出错误，需要用`throws`修饰.
+     
+     ``` swift
+     func buyFavoriteSnack(person: String, vendingMachine: VendingMachine) throws {
+       let snackName = favoriteSnacks[person] ?? "Candy Bar"
+       try vendingMachine.vend(itemNamed: snackName)
+     }
+     ```
+     
+     任何由`vend(itemNamed:)`方法抛出的错误会一直被传递到`buyFavoriteSnack(_:vendingMachine)`函数被调用的地方.
+     
+  2. 使用`do-catch`立即处理错误
+     
+     ``` swift
+     do {
+       try buyFavoriteSnack("Alice", vendingMachine: vendingMachine)
+       ...
+     } catch VendingMachineError.InvalidSelection {
+       
+     } catch VendingMachineError.OutOfStock {
+     
+     } catch VendingMachineError.InsufficientFunds(let coinsNeeded) {
+     }
+     ```
+     
+     尝试执行语句，一旦出错立即处理(进入catch中). 如果没有错误，则继续执行do语句余下的语句.
+     
+  3. 将错误作为可选类型立即处理
+     
+     ``` swift
+     func someThrowingFunction() throws -> Int {
+     	...
+     }
+     
+     let x = try? someThrowingFunction()
+     
+     let y: Int?
+     do {
+       y = try someThrowingFunction()
+     } catch {
+       y = nil
+     }
+     
+     func fetchData() -> Data? {
+       if let data = try? fetchDataFromDisk() {
+         return data
+       }
+       if let data = try? fetchDataFromServer() {
+         return data
+       }
+       return nil
+     }
+     ```
+     
+  4. 断言此错误根本不会发生，立即处理错误
+     
+     ``` swift
+     let photo = try! loadImage("...")
+     ```
+  
++ 指定清理操作
+  
+  使用`defer`语句在代码执行到要离开当前的代码段之前去执行一套语句，该语句能让你做一些清理工作.（无论是由于抛出错误离开还是`return`,`break`离开）
+  
+  ``` swift
+  func processFile(filename: String) throws {
+  	if esists(filename) {
+      	let file = open(filename)
+          defer {
+          	close(file)
+  		}
+          while let line = try file.readline() {
+          	// 处理文件
+  		}
+          // 在这里会执行defer语句中的`close(file)`
+  	}
+  }
+  ```
+  
+  `defer`语句只在当前作用域中起作用，在即将离开作用域的时候会执行`defer`中的语句. 注意，即使没有涉及到错误处理代码，依然可以使用`defer`语句.
+  
+  如果有多条`defer`语句，是从下向上执行的. (第一条`defer`语句中的代码是在第二条`defer`语句代码执行后再执行)
