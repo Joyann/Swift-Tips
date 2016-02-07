@@ -950,7 +950,7 @@ str.removeRange(strRange)
        try buyFavoriteSnack("Alice", vendingMachine: vendingMachine)
        ...
      } catch VendingMachineError.InvalidSelection {
-       
+     
      } catch VendingMachineError.OutOfStock {
      
      } catch VendingMachineError.InsufficientFunds(let coinsNeeded) {
@@ -1076,5 +1076,184 @@ str.removeRange(strRange)
     }
   }
   ```
+
+---
+
+## 协议
+
++ 如果类在遵循协议的同时拥有父类，应该将父类名放在协议名之前.
+  
++ 协议中的属性需要表明是`只读`还是`可读可写`.
+  
+  ``` swift
+  protocol SomeProtocol {
+  	var someProperty: String { get }
+      var anthorProperty: String { get set }
+  }
+  ```
   
   ​
+  
++ 在协议中可以定义可变参数的方法，但是不支持参数默认值.
+  
++ 可以在协议中声明类的__指定构造器__和__便利构造器__，但是在实现这个构造器的时候都必须加上`required`修饰符. 
+  
+  > 如果类已经被标记为`final`，那么不需要`required`修饰符，因为final类不能有子类.
+  
+  ``` swift
+  protocol SomeProtocol {
+  	init(someParameter: Int)
+  }
+  
+  class SomeClass: SomeProtocol {
+  	required init(someParameter: Int) {
+      	// ...
+  	}
+  }
+  ```
+  
+  ​
+  
++ 如果一个子类重写了父类的指定构造器，并且该构造器遵循了某个协议的规定，那么该构造器的实现需要被同时标示`required`和`override`.
+  
+  ``` swift
+  protocol SomeProtocol {
+  	init()
+  }
+  
+  class SomeSuperClass {
+    	init() {
+      // 构造器的实现
+  	}
+  }
+  
+  class SomeSubClass: SomeSuperClass, SomeProtocol {
+  	// 因为遵循协议，需要加上`required`;因为继承自父类，需要加上`override`
+      required override init() {
+      	// 构造器的实现
+  	}
+  }
+  ```
+  
++ 如果在协议中定义一个__可失败构造器__，则在遵循该协议的类型中必须添加__同名通参数的可失败构造器或非可失败构造器__. 
+  
+  如果在协议中定义一个__非可失败构造器__，则在遵循该协议的类型中必须添加__同名同参数的非可失败构造器或隐式解析类型的可失败构造器(init!)__.
+  
++ __尽管协议本身并不实现任何功能，但是协议可以当作类型来使用（类似于`类`）__.
+  
++ 协议允许多继承.
+  
+  ``` swift
+  protocol InheritingProtocol: SomeProtocol, AnotherProtocol {
+  	...
+  }
+  ```
+  
+  ​
+  
++ 类专属协议：可以在协议的继承列表中，通过添加`class`来限制协议只能适配到类类型. 注意，`class`关键字必须是第一个出现在协议的继承列表中，其后才是其他继承协议.
+  
+  ``` swift
+  protocol SomeClassOnlyProtocol: class, SomeInheritedProtocol {
+    ...
+  }
+  ```
+  
++ 协议合成
+  
+  ``` swift
+  protocol Named {
+    var name: String { get }
+  }
+  
+  protocol Aged {
+    var age: Int { get }
+  }
+  
+  struct Person: Named, Aged {
+    var name: String
+    var age: Int
+  }
+  
+  func wishHappyBirthday(celevrator: protocol<Named, Aged>) {
+    ...
+  }
+  
+  let birthdayPerson = Person()
+  wishHappyBirthday(birthdayPerson)
+  ```
+  
+  `Person`类遵循了两个协议.
+  
+  `withHappyBirthday`的`celebrator`形参可以传入任意遵循这两个协议的类型的实例.
+  
+  > 注意，在Person遵守协议的地方是不能使用`protocol<Named, Aged>`这种形式的. 在作为参数的类型的时候是可以使用的.
+  > 
+  > 协议合成并不会生成一个新协议类型，而是将多个协议合成为一个临时的协议，超出范围后立即失效.
+  
++ `is`检查实例是否遵循了某个协议.
+  
+  `as(as?和as!)`用于向下转型. 当实例遵循某个协议时，`as?`返回该协议类型的值.
+  
++ 可选协议
+  
+  使用`optional`作为前缀来定义可选成员.
+  
+  可选协议在调用时使用`可选链`. 你可以在可选方法名称后面加上`?`. 比如：`someOptionalMethod?(someArgument)`. 如果实现了该协议中的可选方法，那么就会调用这个方法；如果没有实现，则返回nil.
+  
+  > 注意，可选协议只能在含有`@objc`的协议中生效. (协议中有可选属性/可选方法就需要用`objc`修饰.) `@objc`的协议只能由继承自Objective-C类的类或者其他的`@objc`类来遵循，并且不能被结构体和枚举遵循.
+  
+  ``` swift
+  @objc protocol CounterDataSource {
+    optional func incrementForCount(count: Int) -> Int
+    optional var fixedIncrement: Int { get }
+  }
+  
+  @objc Class Counter {
+    var count = 0
+    var dataSource: CounterDataSource?
+    func increment() {
+      if let amount = dataSource?.incrementForCount?(count) {
+    	  count += amount
+  	} else if let amount = dataSource?.fixedIncrement? {
+        count += amount
+  	}
+    }
+  }
+  ```
+  
++ 协议也支持扩展，可以通过`extension`来扩展协议，增加属性和方法的实现.
+  
+  ``` swift
+  extension RandomNumberGenerator {
+  	func randomBool() -> Bool {
+      	return random() > 0.5
+  	}
+  }
+  ```
+  
++ 为协议扩展添加限制条件
+  
+  ``` swift
+  extension CollectionType where Generator.Element: TextRepresentable {
+  	var textualDescription: String {
+      	let itemsAsText = self.map {
+          	$0.textualDescription
+  		}
+          return "[" + itemsAsText.joinWithSeparator(",") + "]"
+  	}
+  }
+  ```
+  
+  扩展`CollectionType`协议，但是只适用于元素遵循`TextRepresentable`的情况.
+  
+  ``` swift
+  let murrayTheHamster = Hamster(name: "Murray")
+  let morganTheHamster = Hamster(name: "Morgan")
+  let mauriceTheHamster = Hamster(name: "Maurice")
+  let hamsters = [murrayTheHamster, morganTheHamster, mauriceTheHamster]”
+  
+  print(hamsters.textualDescription)
+  ```
+  
+  `hamsters`遵循`CollectionType`协议，数组的元素(Hamster的实例)又遵循`TextRepresentable`协议，所以数组可以使用`textualDescription`属性.
