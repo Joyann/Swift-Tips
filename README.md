@@ -2,6 +2,27 @@
 
 Confetti ...
 
+## 其它注意点
+
++ 在Swift中使用字符串的方式创建一个类，必须要加上__命名空间__.
+  
+  ``` swift
+  // 获取命名空间
+  let nameSpace = NSBundale.mainBundle().infoDictionary!["CFBundleExecutable"]
+  guard let ns = nameSpace as? String else {
+    return
+  }
+  let cls: AnyClass? = NSClassFromString(ns + "." + controllerName) // AnyClass的本质是AnyObject.Type
+  guard let clsType = cls as? UIViewController.Type else {
+  	return
+  }
+  
+  let vc = clsType.init() // 根据控制器类型构建控制器对象.
+  ...
+  ```
+  
+  ​
+
 ---
 
 ## String
