@@ -21,7 +21,19 @@ Confetti ...
   ...
   ```
   
-  ​
++ 想要快速创建一个对象，可以提供类方法来创建. 个人认为更好的方式是可以为这个类添加一个Extension来提供创建方法. 在Swift中可以通过在Extension中提供类的`便利构造方法`来快速创建对象(不要忘记调用指定构造器和`convenience`). 
+  
+  ``` swift
+  extension UIButton {
+    concenience init(imageNamed: String, backgroundImageNamed: String) {
+      self.init()
+    
+    	setBackgroundImage...
+    	setImage...
+    	sizeToFit()
+    }
+  }
+  ```
 
 ---
 
