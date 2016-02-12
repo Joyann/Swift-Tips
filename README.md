@@ -1306,7 +1306,61 @@ str.removeRange(strRange)
   ``` swift
   func someFunction<T:SomeClass, U: SomeProtocol>(someT: T, someU: U) {
     ...
+  }		
+  ```
+  
++ 当定义一个协议时，需要声明一个或多个__关联类型__作为协议定义的一部分.
+  
+  ``` swift
+  protocol Container {
+    typealias ItemType
+    mutating func append(item: ItemType)
+    var count: Int{ get }
+    subscript(i: Int) -> ItemType( get )
   }
   ```
   
-  ​
+  因为协议中用到了某一种数据类型，但是并没有指定是哪一种具体的类型. 所以需要一个类型的`代号`.
+  
+  ``` swift
+  struct IntStack: Container {
+  	typealias ItemType = Int
+      mutating func append(item: Int){ ... }
+      var count: Int { return items.count }
+      subscript(i: Int) -> Int { return items[i] }
+  }
+  ```
+  
+  因为Swift可以推断出`ItemType`，所以删除`typealias ItemType = Int`这一行，一切仍旧可以工作.
+  
+  ``` swift
+  struct Stack<T>: Container {
+    var items = [T]()
+    mutating func append(item: T) { ... }
+    var count: Int { return items.count }
+    subscript(i: Int) -> T { return items[i] }
+  }
+  ```
+  
+  以上是使用遵循`Container协议`的泛型`Stack`类型.
+  
++ 对关联类型定义约束是非常有用的(类型约束)
+  
+  ``` swift
+  func allItemsMatch<C1: Container, C2: Container where C1.ItemType == C2.ItemType, C1.ItemType: Equatable> (someContainer: C1, anoterContainer: C2) -> Bool {
+  	// 检查两个Container的元素个数是否相同
+  	if someContainer.count != anoterContainer.count { return false }
+      
+      // 检查两个Container相应位置的元素彼此是否相等
+      for i in 0..<someContainer.count {
+    		for someContainer[i] != anoterContainer[i] { return false }
+  	}
+      // 如果所有元素检查都相同则返回true
+      return true
+  }
+  ```
+  
+  + `C1`必须遵循`Container`协议 （`C1: Container`）
+  + `C2`必须遵循`Container`协议 （`C2: Container`）
+  + `C1`的`ItemType`同样是`C2`的`ItemType` （`C1.ItemType == C2.ItemType`）
+  + `C1`的`ItemType`必须遵循`Equatable`协议 （`C1.ItemType: Equatable`）
