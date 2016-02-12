@@ -1294,3 +1294,19 @@ str.removeRange(strRange)
   ```
   
   `hamsters`遵循`CollectionType`协议，数组的元素(Hamster的实例)又遵循`TextRepresentable`协议，所以数组可以使用`textualDescription`属性.
+
+---
+
+## 泛型
+
++ 当你拓展一个泛型类型的时候，并不需要在扩展的定义中提供类型参数列表.
+  
++ 有时候会对泛型进行约束. 如`Dictionary`的键类型必须是`可哈希(遵循Hashable协议)`的，也就是说，必须有一种方法可以使其被唯一的表示. 所有的Swift基本类型(`String`, `Int`, `Double`, `Bool`)默认都是可哈希.
+  
+  ``` swift
+  func someFunction<T:SomeClass, U: SomeProtocol>(someT: T, someU: U) {
+    ...
+  }
+  ```
+  
+  ​
