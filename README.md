@@ -1427,4 +1427,149 @@ str.removeRange(strRange)
   
 + 枚举中成员的访问级别由该枚举决定，不能为枚举中的成员单独申明不同的访问级别.
   
++ 原始值和关联值
+  
+  枚举定义中的任何原始值或关联值的类型都必须有一个访问级别，这个级别要大于等于枚举的访问级别. 你不能在一个`internal`访问级别的枚举中定义`private`级别的原始值类型.
+  
++ 嵌套类型
+  
+  如果在`private`级别的类型中定义嵌套类型，那么该嵌套类型就自动拥有`private`访问级别；
+  
+  如果在`public`或者`internal`级别的类型中定义嵌套类型，那么该嵌套类型自动拥有`internal`访问级别. 如果想让嵌套类型拥有`public`访问级别，那么需要明确标明.
+  
++ 子类
+  
+  + 子类的访问级别不得高于父类的访问级别.
+    
+    比如，父类的访问级别是`internal`，那么子类的访问级别就不能声明为`public`.
+    
+  + 在满足子类不高于父类访问级别以及遵循各访问级别作用域(模块或源文件)的前提下，你可以重写任意类成员(方法…). 如果我们无法直接访问某个类中的属性或函数等，那么可以继承该类，从而可以更容易的访问到该类的类成员.
+    
+    ``` swift
+    public class A {
+      private func someMethod() {}
+    }
+    
+    internal classB: A {
+      override internal func someMethods() {}
+    }
+    ```
+    
+    我们设置可以在子类中，用子类成员访问父类成员，哪怕父类成员的访问级别比子类成员要低：
+    
+    ``` swift
+    public class A {
+      private func someMethod() {}
+    }
+    
+    internal class B: A {
+      override internal func someMethod() {
+        super.someMethod()
+      }
+    }
+    ```
+    
+    因为父类`A`和子类`B`定义在同一个源文件中，所以在`B`中可以在重写的`someMethod`方法中调用`super.someMethod()`
+  
++ 常量、变量、属性不能拥有比它们的类型更高的访问级别.
+  
+  比如，你定义一个`public`的属性，但是他的类型是`private`级别的，这是错误的.
+  
+  如果常量、变量、属性、下标索引的定义类型是`private`级别的，那么它们必须要明确的申明访问级别为`private`：
+  
+  ``` swift
+  private var privateInstance = SomePrivateClass()
+  ```
+  
++ Getter和Setter
+  
+  常量、变量、属性、下标索引的`Getters`和`Setters`的访问级别继承自它们所属成员的访问级别.
+  
+  `Setter`的访问级别可以低于对应的`Getter`的访问级别，这样就可以控制变量、属性或下标索引的读写权限. 在`var`或`subscript`定义作用域之前，你可以通过`private(set)`或`internal(set)`先为它们的写权限申明一个较低的访问级别.
+  
+  > 这个规定适用于用作__存储属性__或__计算属性__.
+  > 
+  > 即使你不明确地申明存储属性的Getter、Setter，Swift也会隐式的为其创建Getter和Setter，用于对该属性进行读取操作. 使用private(set)和internal(set)可以改变Swift隐式创建的Setter的访问级别。这对计算属性也同样适用.
+  
+  ``` swift
+  struct TrackedString {
+    private(set) var numberOfEdits = 0
+    var value: String = ""{
+    	didSet {
+        numberOfEdits++
+      }
+    }
+  }
+  ```
+  
+  虽然你可以再在其他源文件中实例化该结构体并且获取到`numberOfEdits`的值，但是你不能对其进行赋值. 这样就能很好的告诉使用者，你只管使用，而不需要知道其实现细节.
+  
+  ``` swift
+  public struct TrackedString {
+    public private(set) var numberOfEdits = 0
+    public var value: String = "" {
+      didSet {
+        numberOfEdits++
+      }
+    }
+    public init() {}
+  }
+  ```
+  
+  此时，`numberOfEdits`属性的`Getter`方法访问级别为`public`，而`Setter`方法的访问级别为`private`. 
+  
++ 初始化
+  
+  + 自定义初始化方法访问级别不高于它所属类的访问级别.
+    
+    必要构造器的访问级别必须和所属类的访问级别相同.
+    
+  + 默认构造器(不带参数的初始化方法)的访问级别与所属类型（类、结构体）的访问级别相同.
+    
+    > 注意，如果一个类型为`public`，那么默认构造器为`internal`. 如果想要`public`，必须显示声明.
+    
+  + 结构体的逐一成员构造器
+    
+    如果结构体中任一__存储属性__为`private`，那么它的逐一成员构造器为`private`. 尽管如此，结构体的初始化方法(上面提到的不带参数的初始化方法)的访问级别依然是`internal`.
+    
+    如果想要在其他模块中使用逐一成员构造器，需要提供一个访问级别为`public`的逐一成员构造器.
+  
++ 协议
+  
+  + 协议中的每一个必须要实现的函数都具有和该协议相同的访问级别.
+    
+    > 注意，如果你定义了一个`public`访问级别的协议，那么实现该协议提供的必要函数也会是`public`的访问级别. 这一点不同于其他类型，比如，`public`访问级别的其他类型，他们成员的访问级别为`internal`.
+  
+  
+  + 要确保该协议只在你申明的访问级别作用域中使用.
+    
+  + 如果定义了一个新的协议，并且该协议继承了一个已知协议，那么新协议拥有的访问级别最高也只和被继承协议的访问级别相同. 你不能定义一个`public`的协议而去继承一个`internal`的协议.
+    
+  + 类可以采用比自身访问级别低的协议.
+    
+    你可以定义一个`public`级别的类，可以让它在其他模块中使用，同时它也可以采用一个`internal`的协议，并且只能在定义了该协议的模块中使用.
+    
+  + 采用了协议的类的访问级别取它本身和所采用协议中最低的访问级别. 也就是说如果一个类是`public`，采用的协议是`internal`，那么该类的访问级别变为`internal`.
+  
++ 扩展
+  
+  >  扩展成员应该具有和原始类成员一致的访问级别。比如你扩展了一个公共类型，那么你新加的成员应该具有和原始成员一样的默认的internal访问级别。
+  > 
+  > 或者，你可以明确申明扩展的访问级别（比如使用private extension）给该扩展内所有成员申明一个新的默认访问级别。这个新的默认访问级别仍然可以被单独成员所申明的访问级别所覆盖。
+  
+  如果一些扩展采用了某个协议，那么你就不能对该扩展使用访问级别修饰符来声明了. 该扩展中实现协议的方法都会遵守该协议的访问级别.
+  
++ 泛型类型或泛型函数的访问级别取泛型类型、函数本身、泛型类型参数三者中的最低访问级别.
+  
++ 类型别名
+  
+  任何你定义的类型别名都会被当作不同的类型，以便于进行访问控制.
+  
+  一个类型别名的访问级别不可高于原类型的访问级别. 如，一个`private`的类型别名可以设定给一个`public`、`internal`、`private`的类型，但是一个`public`的类型别名只能设定给一个`public`的类型，不能设定给`internal`或`private`的类型.
+  
   ​
+  
+  ​
+  
+  ​
+
