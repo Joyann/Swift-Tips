@@ -1566,10 +1566,117 @@ str.removeRange(strRange)
   任何你定义的类型别名都会被当作不同的类型，以便于进行访问控制.
   
   一个类型别名的访问级别不可高于原类型的访问级别. 如，一个`private`的类型别名可以设定给一个`public`、`internal`、`private`的类型，但是一个`public`的类型别名只能设定给一个`public`的类型，不能设定给`internal`或`private`的类型.
+
+---
+
+## 高级运算符
+
++ 双目中缀运算符
   
-  ​
+  ``` swift
+  struct Vector2D {
+    var x = 0.0, y = 0.0
+  }
   
-  ​
+  func +(left: Vector2D, right: Vector2D) -> Vector2D {
+    return Vector2D(x:left.x + right.x, y: left.y + right.y)
+  }
   
-  ​
+  let vector = Vector2D(x: 3.0, y: 1.0)
+  let anotherVector = Vector2D(x:2.0, y: 4.0)
+  let combinedVector = vector + anotherVector
+  ```
+  
++ 前缀和后缀运算符
+  
+  实现前缀/后缀运算符，需要在`func`之前指定`prefix`或者`postfix`限定符：
+  
+  ``` swift
+  prefix func -(vector: Vector2D) -> Vector2D {
+    return Vector2D(x: -vector.x, y: -vector.y)
+  }
+  
+  let positive = Vector2D(x: 3.0, y: 4.0)
+  let negative = -positive
+  // negative是一个值为(-3.0, -4.0)的Vector2D实例
+  ```
+  
++ 复合赋值运算符
+  
+  在实现复合赋值运算符(+=)的时候，需要把运算符的左参数设置成`inout`类型，因为这个参数的值会在运算符函数内直接被修改.
+  
+  ``` swift
+  func +=(inout left: Vector2D, right: Vector2D) {
+    left = left + right
+  }
+  ```
+  
++ `prefix/postfix`和复合赋值运算符结合：
+  
+  ``` swift
+  prefix func ++(inout vector: Vector2D) -> Vector2D {
+    vector += Vector2D(x: 1.0, y: 1.0)
+    return vector
+  }
+  ```
+  
++ 不能对默认的赋值运算符(=)进行重载，只有组合赋值运算符可以被重载.
+  
++ 不能对三目条件运算符进行重载.
+  
++ 等价操作符
+  
+  ``` swift
+  func ==(left: Vector2D, right: Vector2D) -> Bool {
+    return (left.x == right.x) && (left.y == right.y)
+  }
+  
+  func != (left: Vector2D, right: Vector2D) -> Bool {
+    return !(left == right)
+  }
+  ```
+  
++ 自定义运算符
+  
+  新的运算符要在全局作用域内，使用`operator`关键字并且指定`prefix`、`infix`或`postfix`.
+  
+  ``` swift
+  prefix operator +++ {}
+  ```
+  
+  上面的代码定义了一个新的名为`+++`的前缀运算符.
+  
+  ``` swift
+  prefix func +++(inout vector: Vector2D) -> Vector2D {
+    vector += vector
+    return vector
+  }
+  
+  var toBeDoubled = Vector2D(x:1.0, y: 4.0)
+  let afterDoubling = +++toBeDoubled
+  ```
+  
++ 自定义中缀运算符的优先级和结合性
+  
+  自定义的中缀(`infix`)运算符也可以指定优先级(`precedence`)和结合性(`associativity`).
+  
+  结合性可取的值有`left`，`right`和`none`. 默认为`none`.
+  
+  优先级默认为`100`.
+  
+  ``` swift
+  infix operator +- { associativity left precedence 140 }
+  
+  func +-(left: Vector2D, right: Vector2D) -> Vector2D {
+    return Vector2D(x: left.x + right.x, y: left.y - right.y)
+  }
+  
+  let firstVector = Vector2D(x: 1.0, y: 2.0)
+  let secondVector = Vector2D(x: 3.0, y: 4.0)
+  let plusMinusVector = firstVector +- secondVector
+  ```
+  
+  > 当定义前缀与后缀操作符的时候，我们并没有指定优先级. 然而，如果对同一个操作数同时使用前缀与后缀操作符，则后缀操作符会先被执行.
+
+
 
